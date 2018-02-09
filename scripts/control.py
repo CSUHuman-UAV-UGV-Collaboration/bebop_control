@@ -8,6 +8,7 @@ import numpy as np
 from std_msgs.msg import Empty
 from tf.msg import tfMessage
 from tf.transformations import quaternion_from_euler
+from tf.transformations import euler_from_quaternion
 
 class BebopControl():
     def __init__(self):
@@ -24,6 +25,7 @@ class BebopControl():
         self.pub_takeoff = rospy.Publisher('bebop/takeoff', Empty, queue_size=1, latch=True)
         self.pub_land = rospy.Publisher('bebop/land', Empty, queue_size=1, latch=True)
         self.pub_cmd_vel = rospy.Publisher('bebop/cmd_vel', Twist, queue_size=1)
+        self.pub_camera_control = rospy.Publisher('bebop/camera_control', Twist, queue_size=1)
 
         # uncomment to enable takeoff on start here
         #takeoff = Empty()
@@ -40,11 +42,21 @@ class BebopControl():
         if self.land_initiated == False:
             self.land_initiated = True
             rospy.loginfo("Initiating Landing Sequence.")
+            cam_msg = Twist()
+            cam_msg.angular.y = -90
+            rospy.sleep(4)
+            rospy.loginfo("> Camera facing down.")
+            self.pub_camera_control.publish(cam_msg)
+
 
     # call back for marker pose
     def marker_callback(self, data):
         if self.land_initiated:
-            print data.markers
+            for marker in data.markers:
+                q = marker.pose.pose.orientation
+                print q
+                rpy = euler_from_quaternion([q.x, q.y, q.z, q.w])
+                print "euler: ",rpy
     
 
 if __name__ == '__main__':
