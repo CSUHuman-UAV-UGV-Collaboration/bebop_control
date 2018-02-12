@@ -12,8 +12,10 @@ from tf.transformations import euler_from_quaternion
 
 class BebopControl():
     def __init__(self):
-        self.speed = 0.25
+        self.speed = 0.02
         self.land_initiated = False
+        self.angle_zone = 0.10
+        self.position_zone = 0.1
 
         rospy.init_node('bebop_control', anonymous=False)
 
@@ -44,20 +46,53 @@ class BebopControl():
             rospy.loginfo("Initiating Landing Sequence.")
             cam_msg = Twist()
             cam_msg.angular.y = -90
+            self.pub_camera_control.publish(cam_msg)
             rospy.sleep(4)
             rospy.loginfo("> Camera facing down.")
-            self.pub_camera_control.publish(cam_msg)
-
 
     # call back for marker pose
     def marker_callback(self, data):
+        
         if self.land_initiated:
             for marker in data.markers:
+                vel_msg = Twist()
                 q = marker.pose.pose.orientation
-                print q
-                rpy = euler_from_quaternion([q.x, q.y, q.z, q.w])
-                print "euler: ",rpy
-    
+                roll,pitch,yaw = euler_from_quaternion([q.x, q.y, q.z, q.w])
+
+                p = marker.pose.pose.position
+                print "position", p
+
+                # rotate
+                print "euler: ",roll,pitch,yaw
+                if yaw < (1.57 - self.angle_zone):
+                    print "rotate counter clockwise"
+                    vel_msg.angular.z = 0.1
+                elif yaw > (1.57 + self.angle_zone):
+                    print "rotate clockwise"
+                    vel_msg.angular.z = -0.1
+                else:
+                    print "angle locked"
+                    vel_msg.angular.z = 0
+
+                # position
+
+                # left-right
+                if p.x > (0 + self.position_zone):
+                    vel_msg.linear.y = -self.speed
+                elif p.x < (0 - self.position_zone):
+                    vel_msg.linear.y = self.speed
+                else:
+                    vel_msg.linear.y = 0
+
+                # forward-backward
+                if p.y > (0 + self.position_zone):
+                    vel_msg.linear.x = -self.speed
+                elif p.y < (0 + self.position_zone):
+                    vel_msg.linear.x = self.speed
+                else:
+                    vel_msg.linear.x = 0
+
+                self.pub_cmd_vel.publish(vel_msg)
 
 if __name__ == '__main__':
     try:
