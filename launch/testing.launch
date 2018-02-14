@@ -1,0 +1,8 @@
+<launch>
+  <include file="$(find bebop_driver)/launch/bebop_node.launch" />
+  <include file="$(find ar_track_alvar)/launch/bebop_indiv.launch"/>
+
+  <!-- launches the control.py file -->
+  <node name="bebop_control" pkg="bebop_control" type="control.py"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find bebop_control)/rviz/bebop_rviz.rviz"/>
+</launch>
