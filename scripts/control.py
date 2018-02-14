@@ -15,7 +15,10 @@ class BebopControl():
         self.speed = 0.02
         self.land_initiated = False
         self.angle_zone = 0.10
-        self.position_zone = 0.1
+        self.position_zone = 0.05
+        self.can_rotate = False
+        self.x_locked = False
+        self.y_locked = False
 
         rospy.init_node('bebop_control', anonymous=False)
 
@@ -63,34 +66,46 @@ class BebopControl():
                 print "position", p
 
                 # rotate
-                print "euler: ",roll,pitch,yaw
-                if yaw < (1.57 - self.angle_zone):
-                    print "rotate counter clockwise"
-                    vel_msg.angular.z = 0.1
-                elif yaw > (1.57 + self.angle_zone):
-                    print "rotate clockwise"
-                    vel_msg.angular.z = -0.1
-                else:
-                    print "angle locked"
-                    vel_msg.angular.z = 0
+                if self.can_rotate:
+                    print "euler: ",roll,pitch,yaw
+                    if yaw < (1.57 - self.angle_zone):
+                        print "rotate counter clockwise"
+                        vel_msg.angular.z = 0.1
+                    elif yaw > (1.57 + self.angle_zone):
+                        print "rotate clockwise"
+                        vel_msg.angular.z = -0.1
+                    else:
+                        print "angle locked"
+                        vel_msg.angular.z = 0
 
                 # position
 
                 # left-right
                 if p.x > (0 + self.position_zone):
                     vel_msg.linear.y = -self.speed
+                    self.x_locked = False
                 elif p.x < (0 - self.position_zone):
                     vel_msg.linear.y = self.speed
+                    self.x_locked = False
                 else:
                     vel_msg.linear.y = 0
+                    self.x_locked = True
 
                 # forward-backward
                 if p.y > (0 + self.position_zone):
                     vel_msg.linear.x = -self.speed
-                elif p.y < (0 + self.position_zone):
+                    self.y_locked = False
+                elif p.y < (0 - self.position_zone):
                     vel_msg.linear.x = self.speed
+                    self.y_locked = False
                 else:
                     vel_msg.linear.x = 0
+                    self.y_locked = True
+
+                if self.x_locked and self.y_locked:
+                    self.can_rotate = True
+                else:
+                    self.can_rotate = False
 
                 self.pub_cmd_vel.publish(vel_msg)
 
