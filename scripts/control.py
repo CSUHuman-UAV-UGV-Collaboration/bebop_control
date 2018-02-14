@@ -28,8 +28,8 @@ class BebopControl():
         #subscribers
         rospy.Subscriber('bebop/initiate_landing', Empty, self.land_callback)
         rospy.Subscriber('/ar_pose_marker', AlvarMarkers, self.marker_callback)
-        #publishers
         
+        #publishers
         self.pub_takeoff = rospy.Publisher('bebop/takeoff', Empty, queue_size=1, latch=True)
         self.pub_land = rospy.Publisher('bebop/land', Empty, queue_size=1, latch=True)
         self.pub_cmd_vel = rospy.Publisher('bebop/cmd_vel', Twist, queue_size=1)
