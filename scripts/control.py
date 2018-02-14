@@ -13,12 +13,15 @@ from tf.transformations import euler_from_quaternion
 class BebopControl():
     def __init__(self):
         self.speed = 0.02
+        self.vert_speed = 0.25
         self.land_initiated = False
         self.angle_zone = 0.10
         self.position_zone = 0.05
         self.can_rotate = False
+        self.angle_locked = False
         self.x_locked = False
         self.y_locked = False
+        self.land_height = 0.5
 
         rospy.init_node('bebop_control', anonymous=False)
 
@@ -71,12 +74,15 @@ class BebopControl():
                     if yaw < (1.57 - self.angle_zone):
                         print "rotate counter clockwise"
                         vel_msg.angular.z = 0.1
+                        self.angle_locked = False
                     elif yaw > (1.57 + self.angle_zone):
                         print "rotate clockwise"
                         vel_msg.angular.z = -0.1
+                        self.angle_locked = False
                     else:
                         print "angle locked"
                         vel_msg.angular.z = 0
+                        self.angle_locked = True
 
                 # position
 
@@ -90,6 +96,7 @@ class BebopControl():
                 else:
                     vel_msg.linear.y = 0
                     self.x_locked = True
+                    print "x locked"
 
                 # forward-backward
                 if p.y > (0 + self.position_zone):
@@ -101,11 +108,21 @@ class BebopControl():
                 else:
                     vel_msg.linear.x = 0
                     self.y_locked = True
+                    print "y locked"
 
                 if self.x_locked and self.y_locked:
                     self.can_rotate = True
                 else:
                     self.can_rotate = False
+
+                # descend
+                if self.angle_locked == True and self.x_locked == True and self.y_locked == True:
+                    if p.z > self.land_height:
+                        vel_msg.linear.z = -(self.vert_speed)
+                    else:
+                        land = Empty()
+                        self.pub_land.publish(land)
+                        #self.initiate_landing = False
 
                 self.pub_cmd_vel.publish(vel_msg)
 
