@@ -11,3 +11,7 @@
 * ~~PART 2: align the drone position with the marker (linear velocity, translation)~~
 * ~~lower drone and land on the landing pad~~
 * improve landing performance
+** implement 'smooth' translation
+** flat trim before flight
+** clean bottom camera
+** add more visual features on the landing pad
