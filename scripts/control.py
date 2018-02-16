@@ -12,7 +12,8 @@ from tf.transformations import euler_from_quaternion
 
 class BebopControl():
     def __init__(self):
-        self.speed = 0.02
+        self.speed = 0.1
+        self.min_speed = 0.01
         self.vert_speed = 0.25
         self.land_initiated = False
         self.angle_zone = 0.10
@@ -155,11 +156,11 @@ class BebopControl():
                     print "euler: ",roll,pitch,yaw
                     if yaw < (1.57 - self.angle_zone):
                         print "rotate counter clockwise"
-                        vel_msg.angular.z = 0.06
+                        vel_msg.angular.z = 0.05
                         self.angle_locked = False
                     elif yaw > (1.57 + self.angle_zone):
                         print "rotate clockwise"
-                        vel_msg.angular.z = -0.06
+                        vel_msg.angular.z = -0.05
                         self.angle_locked = False
                     else:
                         print "angle locked"
@@ -170,10 +171,10 @@ class BebopControl():
 
                 # left-right
                 if p.x > (0 + self.position_zone):
-                    vel_msg.linear.y = -self.speed
+                    vel_msg.linear.y = -1 * max(self.speed * abs(p.x), self.min_speed)
                     self.x_locked = False
                 elif p.x < (0 - self.position_zone):
-                    vel_msg.linear.y = self.speed
+                    vel_msg.linear.y = max(self.speed * abs(p.x), self.min_speed)
                     self.x_locked = False
                 else:
                     vel_msg.linear.y = 0
@@ -182,10 +183,10 @@ class BebopControl():
 
                 # forward-backward
                 if p.y > (0 + self.position_zone):
-                    vel_msg.linear.x = -self.speed
+                    vel_msg.linear.x = -1 * max(self.speed * abs(p.y), self.min_speed)
                     self.y_locked = False
                 elif p.y < (0 - self.position_zone):
-                    vel_msg.linear.x = self.speed
+                    vel_msg.linear.x = max(self.speed * abs(p.y), self.min_speed)
                     self.y_locked = False
                 else:
                     vel_msg.linear.x = 0
