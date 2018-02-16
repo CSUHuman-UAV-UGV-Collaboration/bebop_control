@@ -14,11 +14,13 @@ class BebopControl():
     def __init__(self):
         self.speed = 0.1
         self.min_speed = 0.01
-        self.vert_speed = 0.25
+        self.vert_speed = 0.20
         self.land_initiated = False
         self.angle_zone = 0.10
         self.position_zone = 0.05
+        self.land_zone_base = 0.10
         self.can_rotate = False
+        self.can_descend = False
         self.angle_locked = False
         self.x_locked = False
         self.y_locked = False
@@ -172,34 +174,37 @@ class BebopControl():
                 # left-right
                 if p.x > (0 + self.position_zone):
                     vel_msg.linear.y = -1 * max(self.speed * abs(p.x), self.min_speed)
-                    self.x_locked = False
+                    #self.x_locked = False
                 elif p.x < (0 - self.position_zone):
                     vel_msg.linear.y = max(self.speed * abs(p.x), self.min_speed)
-                    self.x_locked = False
+                    #self.x_locked = False
                 else:
                     vel_msg.linear.y = 0
-                    self.x_locked = True
+                    #self.x_locked = True
                     print "x locked"
 
                 # forward-backward
                 if p.y > (0 + self.position_zone):
                     vel_msg.linear.x = -1 * max(self.speed * abs(p.y), self.min_speed)
-                    self.y_locked = False
+                    #self.y_locked = False
                 elif p.y < (0 - self.position_zone):
                     vel_msg.linear.x = max(self.speed * abs(p.y), self.min_speed)
-                    self.y_locked = False
+                    #self.y_locked = False
                 else:
                     vel_msg.linear.x = 0
-                    self.y_locked = True
+                    #self.y_locked = True
                     print "y locked"
 
-                #if self.x_locked and self.y_locked:
-                    #self.can_rotate = True
-                #else:
-                #    self.can_rotate = False
+                zone = max(self.land_zone_base * p.z, self.position_zone)
+
+                if p.x < (0 + zone) and p.x > (0 - zone) and p.y < (0 + zone) and p.y > (0 - zone):
+                    self.can_descend = True
+                else:
+                    self.can_descend = False
 
                 # descend
-                if self.angle_locked == True and self.x_locked == True and self.y_locked == True:
+                #if self.angle_locked == True and self.x_locked == True and self.y_locked == True:
+                if self.angle_locked == True and self.can_descend == True:
                     if p.z > self.land_height:
                         vel_msg.linear.z = -(self.vert_speed)
                     else:
