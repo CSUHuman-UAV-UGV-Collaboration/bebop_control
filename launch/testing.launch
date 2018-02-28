@@ -1,6 +1,6 @@
 <launch>
   <include file="$(find bebop_driver)/launch/bebop_node.launch" />
-  <include file="$(find ar_track_alvar)/launch/bebop_indiv.launch"/>
+  <include file="$(find bebop_control)/launch/bebop_indiv.launch"/>
 
   <!-- launches the control.py file -->
   <!-- <node name="bebop_control" pkg="bebop_control" type="control.py"/> -->
