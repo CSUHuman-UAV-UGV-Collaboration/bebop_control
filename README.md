@@ -26,4 +26,9 @@ https://answers.ros.org/question/282343/working-catkinized-orb-slam-2-or-other-m
 Also use Eigen 3.2 instead
 
 Also needed glog_catkin https://github.com/ethz-asl/glog_catkin
---> which needs sudo apt-get install autoconf
+
+--> which needs 
+
+--> sudo apt-get install autoconf
+
+--> https://github.com/uzh-rpg/pangolin_catkin
