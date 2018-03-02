@@ -18,3 +18,9 @@
 	* flat trim before flight
 	* clean bottom camera
 	* add more visual features on the landing pad
+
+orb_slam_2_ros notes
+
+https://answers.ros.org/question/282343/working-catkinized-orb-slam-2-or-other-monocular-slam/
+
+Also use Eigen 3.2 instead
