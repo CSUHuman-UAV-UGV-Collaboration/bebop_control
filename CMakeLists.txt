@@ -9,7 +9,6 @@ project(bebop_control)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   ar_track_alvar
-  bebop_driver
   roscpp
   rospy
   std_msgs
