@@ -11,12 +11,15 @@
   <!-- The move_base node -->
   <include file="$(find bebop_control)/launch/fake_move_base_amcl.launch" />
 
-  <!-- Static transform publisher -->
-  <!--<node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 map base_link 100"/>-->
+  <!-- svo_ros -->
+  <include file="$(find svo_ros)/launch/bebop_svo.launch" />
+
+  <!-- svo to nav -->
+  <node name="bebop_svo_to_nav" pkg="bebop_control" type="svo_to_nav.py" />
   
   <!-- Run fake localization compatible with AMCL output -->
   <node pkg="fake_localization" type="fake_localization" name="fake_localization" clear_params="true" output="screen">
-     <remap from="base_pose_ground_truth" to="bebop/odom" />
+     <remap from="base_pose_ground_truth" to="/vo" />
      <param name="global_frame_id" value="map" />
      <param name="base_frame_id" value="base_link" />
   </node>
