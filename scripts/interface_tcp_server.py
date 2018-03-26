@@ -45,22 +45,23 @@ if __name__ == "__main__":
                 CONNECTION_LIST.append(sockfd)
                 print "Client (%s, %s) connected" % addr
 
-                broadcast_data(sockfd, "[%s:%s] entered room\n" % addr)
+                #broadcast_data(sockfd, "[%s:%s] entered room\n" % addr)
 
             # incoming message from client
             else:
                 try:
                     data = sock.recv(RECV_BUFFER)
                     if data:
-                        broadcast_data(sock, "\r" + '<' + str(sock.getpeername()) + '> ' + data)
+                        #broadcast_data(sock, "\r" + '<' + str(sock.getpeername()) + '> ' + data)
+                        broadcast_data(sock, data)
                     else:
-                        broadcast_data(sock, "Client (%s, %s) is offline\n" % addr)
+                        #broadcast_data(sock, "Client (%s, %s) is offline\n" % addr)
                         print "Client (%s, %s) is offline" % addr
                         sock.close()
                         CONNECTION_LIST.remove(sock)
                         continue
                 except:
-                    broadcast_data(sock, "Client (%s, %s) is offline\n" % addr)
+                    #broadcast_data(sock, "Client (%s, %s) is offline\n" % addr)
                     print "Client (%s, %s) is offline" % addr
                     sock.close()
                     CONNECTION_LIST.remove(sock)
