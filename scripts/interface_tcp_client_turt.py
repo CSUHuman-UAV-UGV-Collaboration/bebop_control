@@ -26,10 +26,10 @@ class Client(object):
         listen_thread.start()
 
         # subscribers, TODO: change from empty msg to drone states
-        rospy.Subscriber('drone_states', DroneStates, self.states_callback)
+        rospy.Subscriber('turtle_states', TurtleStates, self.states_callback)
 
         # publishers, TODO: change from empty msg to turtle states
-        self.pub_turtle_states = rospy.Publisher('turtle_states', TurtleStates, queue_size=1)
+        self.pub_drone_states = rospy.Publisher('drone_states', DroneStates, queue_size=1)
 
 
     def shutdown(self):
@@ -40,20 +40,20 @@ class Client(object):
 
     def states_callback(self, data):
         # get drone state and prepare to send
-        message = 'drone_states ' + str(data.DroneState)
+        message = 'turtle_states ' + str(data.BotState)
         self.sending = True
         self.send(message)
-        rospy.loginfo("Sent drone state")
+        rospy.loginfo("Sent turtle state")
 
     def parse_publish(self, message):
         parts = message.strip().split()
         # maybe use resource strings here
         # parse which message type it is and publish
         # add more message types here
-        if parts[0] == 'turtle_states':
-            msg = TurtleStates()
-            msg.BotState = int(parts[1])
-            self.pub_turtle_states.publish(msg)
+        if parts[0] == 'drone_states':
+            msg = DroneStates()
+            msg.DroneState = int(parts[1])
+            self.pub_drone_states.publish(msg)
         else:
             rospy.loginfo("Invalid message recieved. Ignoring.")
 
@@ -78,7 +78,7 @@ class Client(object):
 
 if __name__ == "__main__":
     try:
-        rospy.init_node('interface_drone_client')
+        rospy.init_node('interface_turtle_client')
         if(len(sys.argv) < 3):
             print 'Usage python interface_tcp_client.py hostname port'
             sys.exit()
