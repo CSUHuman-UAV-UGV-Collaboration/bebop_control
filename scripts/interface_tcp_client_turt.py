@@ -1,5 +1,5 @@
 import threading, socket, sys, rospy
-from std_msgs.msg import Empty
+from std_msgs.msg import Empty, String
 from botsapp.msg import DroneStates, TurtleStates, ResourceString
 
 class Client(object):
@@ -7,6 +7,7 @@ class Client(object):
 
         # initialize vars
         self.sending = False
+        self.resource_string = ResourceString()
 
         # initialize ros
         rospy.on_shutdown(self.shutdown)
@@ -25,11 +26,15 @@ class Client(object):
         listen_thread.daemon = True
         listen_thread.start()
 
-        # subscribers, TODO: change from empty msg to drone states
+        # subscribers
         rospy.Subscriber('turtle_states', TurtleStates, self.states_callback)
+        rospy.Subscriber('turtle_response', String, self.response_callback)
+        rospy.Subscriber('turtle_request', String, self.request_callback)
 
-        # publishers, TODO: change from empty msg to turtle states
+        # publishers
         self.pub_drone_states = rospy.Publisher('drone_states', DroneStates, queue_size=1)
+        self.pub_drone_response = rospy.Publisher('drone_response', String, queue_size=1)
+        self.pub_drone_request = rospy.Publisher('drone_request', String, queue_size=1)
 
 
     def shutdown(self):
@@ -45,6 +50,23 @@ class Client(object):
         self.send(message)
         rospy.loginfo("Sent turtle state")
 
+
+    def response_callback(self, data):
+        # get response after a task is done from the turtlebot and send
+        message = 'turtle_response ' + str(data.data)
+        self.sending = True
+        self.send(message)
+        rospy.loginfo("Sent turtle response")
+
+
+    def request_callback(self, data):
+        # get request from robotcollab and send
+        message = 'turtle_request ' + str(data.data)
+        self.sending = True
+        self.send(message)
+        rospy.loginfo("Sent turtle response")
+
+
     def parse_publish(self, message):
         parts = message.strip().split()
         # maybe use resource strings here
@@ -54,6 +76,14 @@ class Client(object):
             msg = DroneStates()
             msg.DroneState = int(parts[1])
             self.pub_drone_states.publish(msg)
+        elif parts[0] == 'drone_response':
+            msg = String()
+            msg.data = parts[1]
+            self.pub_drone_response.publish(msg)
+        elif parts[0] == 'drone_request':
+            msg = String()
+            msg.data = parts[1]
+            self.pub_drone_request.publish(msg)
         else:
             rospy.loginfo("Invalid message recieved. Ignoring.")
 
