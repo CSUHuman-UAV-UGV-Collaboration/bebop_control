@@ -13,7 +13,7 @@ from tf.transformations import euler_from_quaternion
 
 class BebopControl():
     def __init__(self):
-        # initialize class vars and ros
+        # initialize class vars, flags and ros
         self.speed = 0.1
         self.min_speed = 0.01
         self.vert_speed = 0.20
@@ -89,6 +89,11 @@ class BebopControl():
         # update drone state to flying
         self.drone_states.DroneState = self.drone_states.FLYING
         self.pub_drone_states.publish(self.drone_states)
+
+        # response
+        response = String()
+        response.data = "1"
+        self.pub_response(response)
 
 
     # landing intiation
@@ -262,6 +267,11 @@ class BebopControl():
 
                         # update drone state to docked
                         self.drone_states.DroneState = self.drone_states.DOCKED
+
+                        # response
+                        response = String()
+                        response.data = "1"
+                        self.pub_response(response)
 
                 if(self.non_zero_vel(vel_msg)):
                     self.pub_cmd_vel.publish(vel_msg)
