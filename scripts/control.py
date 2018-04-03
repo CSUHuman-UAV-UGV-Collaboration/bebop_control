@@ -5,13 +5,15 @@ from geometry_msgs.msg import Twist
 #from sensor_msgs.msg import Image
 from ar_track_alvar_msgs.msg import AlvarMarkers
 import numpy as np
-from std_msgs.msg import Empty
+from std_msgs.msg import Empty, String
+from botsapp.msg import DroneStates, TurtleStates, ResourceString
 from tf.msg import tfMessage
 from tf.transformations import quaternion_from_euler
 from tf.transformations import euler_from_quaternion
 
 class BebopControl():
     def __init__(self):
+        # initialize class vars and ros
         self.speed = 0.1
         self.min_speed = 0.01
         self.vert_speed = 0.20
@@ -25,14 +27,22 @@ class BebopControl():
         self.x_locked = False
         self.y_locked = False
         self.land_height = 0.5
+        self.hover = False
 
-        rospy.init_node('bebop_control', anonymous=False)
+        self.resource_string = ResourceString()
+        self.drone_states = DroneStates()
+
+        # initialize drone state in docked state (0)
+        self.drone_states.DroneState = self.drone_states.DOCKED
+
+        rospy.on_shutdown(self.shutdown)
+        rospy.loginfo("Drone Hub Running")
 
         #subscribers
+        #rospy.Subscriber('bebop/initiate_landing', Empty, self.land)
+        rospy.Subscriber(self.resource_string.TOPIC_DRONEREQUEST, String, self.request_callback)
         # !!! Change the callback function in marker subscriber to change landing behavior
         # !!! > self.marker_callback_simul or > self.marker_callback
-
-        rospy.Subscriber('bebop/initiate_landing', Empty, self.land_callback)
         rospy.Subscriber('/ar_pose_marker', AlvarMarkers, self.marker_callback_simul)
         
         #publishers
@@ -40,19 +50,49 @@ class BebopControl():
         self.pub_land = rospy.Publisher('bebop/land', Empty, queue_size=1, latch=True)
         self.pub_cmd_vel = rospy.Publisher('bebop/cmd_vel', Twist, queue_size=1)
         self.pub_camera_control = rospy.Publisher('bebop/camera_control', Twist, queue_size=1)
+        self.pub_response = rospy.Publisher(self.resource_string.TOPIC_DRONERESPONSE, String, queue_size=1)
+        self.pub_drone_states = rospy.Publisher(self.resource_string.TOPIC_DRONESTATE, String, queue_size=1)
 
         # uncomment to enable takeoff on start here
         #takeoff = Empty()
         #self.pub_takeoff.publish(takeoff)
 
+
     def shutdown(self):
-        rospy.loginfo("Shutting down bebop_control node.")
+        rospy.loginfo("Shutting down drone_hub node.")
         land = Empty()
         self.pub_land.publish(land)
         rospy.sleep()
 
-    # call backs for landing intiation
-    def land_callback(self, data):
+
+    # callback to handle commands/requests
+    def request_callback(self, msg):
+        if msg.data == 'takeoff':
+            # do takeoff
+            if self.drone_states.DroneState == self.drone_states.DOCKED:
+                self.takeoff()
+        elif msg.data == 'land':
+            # do land
+            if self.drone_states.DroneState == self.drone_states.FLYING:
+                self.land()
+        else:
+            # invalid
+            rospy.loginfo("Unknown request. Ignoring.")
+
+    
+    # takeoff
+    def takeoff(self):
+        takeoff = Empty()
+        self.pub_takeoff.publish(takeoff)
+        rospy.sleep(2)
+
+        # update drone state to flying
+        self.drone_states.DroneState = self.drone_states.FLYING
+        self.pub_drone_states.publish(self.drone_states)
+
+
+    # landing intiation
+    def land(self):
         if self.land_initiated == False:
             self.land_initiated = True
             rospy.loginfo("Initiating Landing Sequence.")
@@ -60,15 +100,22 @@ class BebopControl():
             cam_msg.angular.y = -90
             self.pub_camera_control.publish(cam_msg)
             rospy.sleep(4)
+
+            # update drone state to landing
+            self.drone_states.DroneState = self.drone_states.LANDING
+            self.pub_drone_states.publish(self.drone_states)
             rospy.loginfo("> Camera facing down.")
 
+
+    # utility function that checks if velocity message is 0
     def non_zero_vel(self, vel_msg):
         if (vel_msg.linear.x == 0 and vel_msg.linear.y == 0 and vel_msg.linear.z == 0 and vel_msg.angular.z == 0):
             return False
 
         return True
 
-    # call back for marker pose
+    
+    # call back for marker pose (old)
     def marker_callback(self, data):
         
         if self.land_initiated:
@@ -138,6 +185,7 @@ class BebopControl():
 
                 self.pub_cmd_vel.publish(vel_msg)
 
+    
     # new call back for marker
     def marker_callback_simul(self, data):
         
@@ -210,15 +258,24 @@ class BebopControl():
                     else:
                         land = Empty()
                         self.pub_land.publish(land)
-                        #self.initiate_landing = False
+                        self.land_initiated = False
+
+                        # update drone state to docked
+                        self.drone_states.DroneState = self.drone_states.DOCKED
 
                 if(self.non_zero_vel(vel_msg)):
                     self.pub_cmd_vel.publish(vel_msg)
+                    self.hover = False
+                elif self.hover == False:
+                    self.pub_cmd_vel.publish(vel_msg)
+                    self.hover = True
+
+
 
 if __name__ == '__main__':
     try:
-        rospy.loginfo("Starting BebopControl node.")
+        rospy.init_node('drone_hub', anonymous=False)
         BebopControl()
         rospy.spin()
-    except rospy.ROSInterrupException:
-        rospy.logerr("BebopControl node terminated.")
+    except rospy.ROSInterruptException:
+        rospy.logerr("drone_hub node terminated.")
