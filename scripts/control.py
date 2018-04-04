@@ -51,7 +51,7 @@ class BebopControl():
         self.pub_cmd_vel = rospy.Publisher('bebop/cmd_vel', Twist, queue_size=1)
         self.pub_camera_control = rospy.Publisher('bebop/camera_control', Twist, queue_size=1)
         self.pub_response = rospy.Publisher(self.resource_string.TOPIC_DRONERESPONSE, String, queue_size=1)
-        self.pub_drone_states = rospy.Publisher(self.resource_string.TOPIC_DRONESTATE, String, queue_size=1)
+        self.pub_drone_states = rospy.Publisher(self.resource_string.TOPIC_DRONESTATE, DroneStates, queue_size=1)
 
         # uncomment to enable takeoff on start here
         #takeoff = Empty()
@@ -93,7 +93,7 @@ class BebopControl():
         # response
         response = String()
         response.data = "1"
-        self.pub_response(response)
+        self.pub_response.publish(response)
 
 
     # landing intiation
@@ -271,7 +271,7 @@ class BebopControl():
                         # response
                         response = String()
                         response.data = "1"
-                        self.pub_response(response)
+                        self.pub_response.publish(response)
 
                 if(self.non_zero_vel(vel_msg)):
                     self.pub_cmd_vel.publish(vel_msg)
