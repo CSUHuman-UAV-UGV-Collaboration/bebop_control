@@ -89,6 +89,7 @@ class BebopControl():
         # update drone state to flying
         self.drone_states.DroneState = self.drone_states.FLYING
         self.pub_drone_states.publish(self.drone_states)
+        rospy.sleep(1)
 
         # response
         response = String()
@@ -267,6 +268,7 @@ class BebopControl():
 
                         # update drone state to docked
                         self.drone_states.DroneState = self.drone_states.DOCKED
+                        rospy.sleep(1)
 
                         # response
                         response = String()
