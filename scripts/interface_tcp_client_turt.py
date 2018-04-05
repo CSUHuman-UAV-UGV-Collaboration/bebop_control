@@ -29,12 +29,12 @@ class Client(object):
         # subscribers
         rospy.Subscriber('turtle_states', TurtleStates, self.states_callback)
         rospy.Subscriber('turtle_response', String, self.response_callback)
-        rospy.Subscriber('turtle_request', String, self.request_callback)
 
         # publishers
         self.pub_drone_states = rospy.Publisher('drone_states', DroneStates, queue_size=1)
         self.pub_drone_response = rospy.Publisher('drone_response', String, queue_size=1)
         self.pub_drone_request = rospy.Publisher('drone_request', String, queue_size=1)
+        self.pub_turtle_request = rospy.Publisher('turtle_request', String, queue_size=1)
 
 
     def shutdown(self):
@@ -59,14 +59,6 @@ class Client(object):
         rospy.loginfo("Sent turtle response")
 
 
-    def request_callback(self, data):
-        # get request from robotcollab and send
-        message = 'turtle_request ' + str(data.data)
-        self.sending = True
-        self.send(message)
-        rospy.loginfo("Sent turtle response")
-
-
     def parse_publish(self, message):
         parts = message.strip().split()
         # maybe use resource strings here
@@ -84,6 +76,10 @@ class Client(object):
             msg = String()
             msg.data = parts[1]
             self.pub_drone_request.publish(msg)
+        elif parts[0] == 'turtle_request':
+            msg = String()
+            msg.data = parts[1]
+            self.pub_turtle_request.publish(msg)
         else:
             rospy.loginfo("Invalid message recieved. Ignoring.")
 

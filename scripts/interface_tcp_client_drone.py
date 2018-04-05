@@ -28,12 +28,13 @@ class Client(object):
         # subscribers
         rospy.Subscriber('drone_states', DroneStates, self.states_callback)
         rospy.Subscriber('drone_response', String, self.response_callback)
-        rospy.Subscriber('drone_request', String, self.request_callback)
+        rospy.Subscriber('drone_request', String, self.drone_request_callback)
+        rospy.Subscriber('turtle_request', String, self.turtle_request_callback)
 
         # publishers
         self.pub_turtle_states = rospy.Publisher('turtle_states', TurtleStates, queue_size=1)
         self.pub_turtle_response = rospy.Publisher('turtle_response', String, queue_size=1)
-        self.pub_turtle_request = rospy.Publisher('turtle_request', String, queue_size=1)
+        #self.pub_turtle_request = rospy.Publisher('turtle_request', String, queue_size=1)
 
 
     def shutdown(self):
@@ -49,6 +50,7 @@ class Client(object):
         self.send(message)
         rospy.loginfo("Sent drone state")
 
+
     def response_callback(self, data):
         # get response after a task is done from the turtlebot and send
         message = 'drone_response ' + str(data.data)
@@ -57,12 +59,20 @@ class Client(object):
         rospy.loginfo("Sent drone response")
 
 
-    def request_callback(self, data):
+    def drone_request_callback(self, data):
         # get request from robotcollab and send
         message = 'drone_request ' + str(data.data)
         self.sending = True
         self.send(message)
-        rospy.loginfo("Sent drone response")
+        rospy.loginfo("Sent drone request")
+
+
+    def turtle_request_callback(self, data):
+        # get request from robotcollab and send
+        message = 'turtle_request ' + str(data.data)
+        self.sending = True
+        self.send(message)
+        rospy.loginfo("Sent turtle request")
 
 
     def parse_publish(self, message):
@@ -78,10 +88,6 @@ class Client(object):
             msg = String()
             msg.data = parts[1]
             self.pub_turtle_response.publish(msg)
-        elif parts[0] == 'turtle_request':
-            msg = String()
-            msg.data = parts[1]
-            self.pub_turtle_request.publish(msg)
         else:
             rospy.loginfo("Invalid message recieved. Ignoring.")
 
