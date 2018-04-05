@@ -78,7 +78,8 @@ class Client(object):
             self.pub_drone_request.publish(msg)
         elif parts[0] == 'turtle_request':
             msg = String()
-            msg.data = parts[1]
+            msg.data = message.replace(parts[0] + ' ','')
+            print "DEBUG: ", msg.data
             self.pub_turtle_request.publish(msg)
         else:
             rospy.loginfo("Invalid message recieved. Ignoring.")
