@@ -268,6 +268,7 @@ class BebopControl():
 
                         # update drone state to docked
                         self.drone_states.DroneState = self.drone_states.DOCKED
+                        self.pub_drone_states.publish(self.drone_states)
                         rospy.sleep(1)
 
                         # response
