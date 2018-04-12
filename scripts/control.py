@@ -75,6 +75,9 @@ class BebopControl():
             # do land
             if self.drone_states.DroneState == self.drone_states.FLYING:
                 self.land()
+        elif msg.data == 'search':
+            if self.drone_states.DroneState == self.drone_states.FLYING:
+                self.search()
         else:
             # invalid
             rospy.loginfo("Unknown request. Ignoring.")
@@ -111,6 +114,41 @@ class BebopControl():
             self.drone_states.DroneState = self.drone_states.LANDING
             self.pub_drone_states.publish(self.drone_states)
             rospy.loginfo("> Camera facing down.")
+
+
+    def search(self):
+        # testing only.  Simply moves forward turns around
+        vel_msg = Twist()
+        vel_msg.linear.x = self.speed
+        
+        # move forward for 1 seconds
+        seconds = 0.0
+        while(seconds < 1):
+            self.pub_cmd_vel.publish(vel_msg)
+            rospy.sleep(0.1)
+            seconds += 0.1
+
+        # turn around
+
+        vel_msg.linear.x = 0
+        vel_msg.angular.z = 0.1
+
+        seconds = 0.0
+        while(seconds < 1):
+            self.pub_cmd_vel.publish(vel_msg)
+            rospy.sleep(0.1)
+            seconds += 0.1
+
+        vel_msg.linear.x = 0
+        vel_msg.angular.z = 0
+
+        self.pub_cmd_vel.publish(vel_msg)
+
+        # response
+        rospy.sleep(1)
+        response = String()
+        response.data = "1"
+        self.pub_response.publish(response)
 
 
     # utility function that checks if velocity message is 0
